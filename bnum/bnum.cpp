@@ -5,8 +5,8 @@
 #include <string>
 #include <fstream>
 
-typedef unsigned short BASE;
-typedef unsigned int DBASE;
+typedef unsigned int BASE;
+typedef unsigned long long DBASE;
 #define BASE_SIZE (sizeof (BASE)*8)
 using namespace std;
 
@@ -320,7 +320,6 @@ public:
         return out;
     }
     
-
     bool operator == (const bnum other)
     {
         if (len!=other.len)
