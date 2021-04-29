@@ -71,7 +71,7 @@ public:
 
     ~bnum()
     {
-        if (coef!=nullptr && coef!=NULL)
+        if (coef!=nullptr)
         {
             delete[] coef;
             coef = nullptr;
@@ -115,6 +115,8 @@ public:
 
         return *this;
     }
+    
+    //16-иричный
     /*
     friend istream& operator >>(istream& in, bnum& cur)
     {
@@ -247,10 +249,11 @@ public:
     }
     */
     
+    //десятичный
     friend istream& operator >>(istream& in, bnum& cur)
     {
         string s;
-        int len_s;
+        size_t len_s;
         bool flag = true;
         while (flag)
         {
@@ -258,7 +261,7 @@ public:
             {
                 in >> s;
                 len_s = s.length();
-                for (int i = 0; i < len_s; i++)
+                for (size_t i = 0; i < len_s; i++)
                 {
                     if (s[i] >= '0' && s[i] <= '9')
                     {
@@ -284,7 +287,7 @@ public:
         cur.coef = new BASE[cur.max_len];
         cur.coef[0] = 0;
 
-        long j = 0;
+        size_t j = 0;
         BASE basis = 10;
 
         while(j<len_s)
@@ -426,8 +429,8 @@ public:
         while (j<t)
         {
             tmp = DBASE(coef[j]) + DBASE(other.coef[j]) + DBASE(k);
-            res.coef[j] = BASE(tmp);
-            k = BASE((tmp >> BASE_SIZE));
+            res.coef[j] = tmp;
+            k = tmp >> BASE_SIZE;
             j++;
         }
         
@@ -437,8 +440,8 @@ public:
             while (j<other.len)
             {
                 tmp = DBASE(other.coef[j]) + DBASE(k);
-                res.coef[j] = BASE(tmp);
-                k = BASE((tmp >> BASE_SIZE));
+                res.coef[j] = tmp;
+                k = tmp >> BASE_SIZE;
                 j++;
             }
         }
@@ -448,8 +451,8 @@ public:
             while (j<len)
             {
                 tmp = DBASE(coef[j]) + DBASE(k);
-                res.coef[j] = BASE(tmp);
-                k = BASE((tmp >> BASE_SIZE));
+                res.coef[j] = tmp;
+                k = tmp >> BASE_SIZE;
                 j++;
             }
         }
@@ -460,7 +463,7 @@ public:
         }
         else
         {
-            res.coef[j] = BASE(k);
+            res.coef[j] = k;
             res.max_len = res.len = j + 1;
         }
         
@@ -480,8 +483,8 @@ public:
         while (j < t)
         {
             tmp = DBASE(coef[j]) + DBASE(other.coef[j]) + DBASE(k);
-            newcoef[j] = BASE(tmp);
-            k = BASE((tmp >> BASE_SIZE));
+            newcoef[j] = tmp;
+            k = tmp >> BASE_SIZE;
             j++;
         }
 
@@ -491,8 +494,8 @@ public:
             while (j < other.len)
             {
                 tmp = DBASE(other.coef[j]) + DBASE(k);
-                newcoef[j] = BASE(tmp);
-                k = BASE((tmp >> BASE_SIZE));
+                newcoef[j] = tmp;
+                k = tmp >> BASE_SIZE;
                 j++;
             }
         }
@@ -502,8 +505,8 @@ public:
             while (j < len)
             {
                 tmp = DBASE(coef[j]) + DBASE(k);
-                newcoef[j] = BASE(tmp);
-                k = BASE((tmp >> BASE_SIZE));
+                newcoef[j] = tmp;
+                k = tmp >> BASE_SIZE;
                 j++;
             }
         }
@@ -521,7 +524,7 @@ public:
         }
         else
         {
-            newcoef[j] = BASE(k);
+            newcoef[j] = k;
             max_len = len = j + 1;
         }
 
@@ -551,18 +554,18 @@ public:
 
         while (j<other.len)
         {
-            tmp = DBASE((1 << BASE_SIZE)) + DBASE(coef[j]);
+            tmp = (DBASE(1) << BASE_SIZE) + DBASE(coef[j]);
             tmp = tmp - DBASE(other.coef[j]) - DBASE(k);
-            res.coef[j] = BASE(tmp);
+            res.coef[j] = tmp;
             k = !(tmp >> BASE_SIZE);
             j++;
         }
         
         while (j < len)
         {
-            tmp = (1 << BASE_SIZE) + DBASE(coef[j]);
+            tmp = (DBASE(1) << BASE_SIZE) + DBASE(coef[j]);
             tmp -= DBASE(k);
-            res.coef[j] = BASE(tmp);
+            res.coef[j] = tmp;
             k = !(tmp >> BASE_SIZE);
             j++;
         }
@@ -586,18 +589,18 @@ public:
 
         while (j < other.len)
         {
-            tmp = DBASE((1 << BASE_SIZE)) + DBASE(coef[j]);
+            tmp = (DBASE(1) << BASE_SIZE) + DBASE(coef[j]);
             tmp = tmp - DBASE(other.coef[j]) - DBASE(k);
-            newcoef[j] = BASE(tmp);
+            newcoef[j] = tmp;
             k = !(tmp >> BASE_SIZE);
             j++;
         }
 
         while (j < len)
         {
-            tmp = (1 << BASE_SIZE) + DBASE(coef[j]);
+            tmp = (DBASE(1) << BASE_SIZE) + DBASE(coef[j]);
             tmp -= k;
-            newcoef[j] = BASE(tmp);
+            newcoef[j] = tmp;
             k = !(tmp >> BASE_SIZE);
             j++;
         }
@@ -623,7 +626,7 @@ public:
         while (j<len)
         {
             tmp = DBASE(coef[j]) * DBASE(other) + DBASE(k);
-            res.coef[j] = BASE(tmp);
+            res.coef[j] = tmp;
             k = tmp >> BASE_SIZE;
             j++;
         }
@@ -654,7 +657,7 @@ public:
             while (i < len)
             {
                 tmp = DBASE(coef[i]) * DBASE(other.coef[j]) + DBASE(res.coef[i + j]) + DBASE(k);
-                res.coef[i + j] = BASE(tmp);
+                res.coef[i + j] = tmp;
                 k = tmp >> BASE_SIZE;
                 i++;
             }
@@ -688,7 +691,7 @@ public:
             while (i < len)
             {
                 tmp = DBASE(coef[i]) * DBASE(other.coef[j]) + DBASE(res.coef[i + j]) + DBASE(k);
-                res.coef[i + j] = BASE(tmp);
+                res.coef[i + j] = tmp;
                 k = tmp >> BASE_SIZE;
                 i++;
             }
@@ -722,11 +725,11 @@ public:
         bnum res(len);
         while (j<len)
         {
-            tmp = (r << BASE_SIZE) + DBASE(coef[len - 1 - j]);
+            tmp = ((DBASE(r)) << BASE_SIZE) + DBASE(coef[len - 1 - j]);
 
             //находим разряд частного
-            res.coef[len - 1 - j] = tmp / other;
-            r = BASE(tmp % DBASE(other));
+            res.coef[len - 1 - j] = tmp / DBASE(other);
+            r = tmp % DBASE(other);
             j++;
         }
 
@@ -743,8 +746,8 @@ public:
 
         while (j < len)
         {
-            tmp = (r << BASE_SIZE) + DBASE(coef[len - 1 - j]);
-            r = BASE(tmp % DBASE(other));
+            tmp = ((DBASE(r)) << BASE_SIZE) + DBASE(coef[len - 1 - j]);
+            r = tmp % DBASE(other);
             j++;
         }
 
@@ -756,32 +759,16 @@ public:
 
 int main()
 {
-    //ifstream cin("t.txt");
-    //bnum num1, num2;
-    //BASE n=0x6;
-    //cin >> num1;
-    //num2= num1 * n;
-    //cout << "check numbers" << endl;
-    //cout << num1 << endl;
-    //cout << hex << DBASE(n) << dec << endl;
-    //cout << endl;
-    //cout << num2 << endl;
-
-    //bnum num1, num2;
-    //cin >> num1;
-    //cin >> num2;
-    //
-    //
-    //cout << endl;
-    //cout << num1 << endl;
-    //cout << num2 << endl;
-
     bnum divisible, remnant, quotient, num_res;
     BASE divisor;
     cin >> divisible;
     cin>> divisor;
+
     cout << divisible << endl;
     cout << divisor << endl;
+    cout << divisible << endl;
+    cout << divisor << endl;
+
     
     quotient = divisible / divisor;
     cout << "quotient: "<< divisible<<" / "<< divisor<<" = " << quotient << endl;
@@ -794,7 +781,7 @@ int main()
     if (num_res == divisible)
     {
         cout << endl;
-        cout << quotient << " * " <<  DBASE(divisor)  << " + " << remnant << " = " << divisible << endl;
+        cout << quotient << " * " <<  divisor  << " + " << remnant << " = " << divisible << endl;
         cout << "Verification was successful" << endl;
     }
     else
