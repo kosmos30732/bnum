@@ -738,6 +738,33 @@ public:
         return res;
     }
 
+    bnum operator / (const bnum& other)
+    {
+        //частные случаи
+        if (other.coef[0]==0 && other.len==1)
+        {
+            bnum res;
+            cout << "The divisor cannot be zero" << endl;
+            return res;
+        }
+        if (*this<other)
+        {
+            bnum res;
+            return res;
+        }
+        if (*this == other)
+        {
+            bnum res;
+            res.coef[0] = 1;
+            return res;
+        }
+        //t = len
+        //n = other.len
+        bnum res(len);
+
+        return res;
+    }
+
     bnum operator % (const BASE other)
     {
         int j = 0;
@@ -752,6 +779,31 @@ public:
         }
 
         res.coef[0] = r;
+
+        return res;
+    }
+
+    bnum operator % (const bnum& other)
+    {
+        //частные случаи
+        if (other.coef[0] == 0 && other.len == 1)
+        {
+            bnum res;
+            cout << "The divisor cannot be zero" << endl;
+            return res;
+        }
+        if (*this < other)
+        {
+            bnum res=other;
+            return res;
+        }
+        if (*this == other)
+        {
+            bnum res;
+            return res;
+        }
+
+        bnum res(other.len);
 
         return res;
     }
