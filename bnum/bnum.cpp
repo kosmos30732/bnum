@@ -5,8 +5,8 @@
 #include <string>
 #include <fstream>
 
-typedef unsigned int BASE;
-typedef unsigned long long DBASE;
+typedef unsigned short BASE;
+typedef unsigned int DBASE;
 #define BASE_SIZE (sizeof (BASE)*8)
 using namespace std;
 
@@ -15,7 +15,6 @@ using namespace std;
 //21b6
 
 class bnum {
-public:
     int len = 0;          //используемая память
     int max_len = 0;      //выделеная память
     BASE* coef = nullptr; //массив коэфициентов
@@ -58,14 +57,13 @@ public:
             j++;
         }
     }
-
+public:
     /* конструктор
     // maxLen - длина нулевого числа
     // random - случайные значения или нулевое число
     */
     bnum(int maxLen = 1, bool random=false)
     {
-        srand(time(NULL));
 
         coef = new BASE[maxLen];
         max_len = len = maxLen;
@@ -813,7 +811,7 @@ public:
         //длина делимого
         int m = u.len - n;        
 
-        //шаг D1 нормализация
+        //нормализация
         DBASE d;
         d = (unsigned long long(1) << BASE_SIZE) / (unsigned long long(v.coef[n - 1]) + unsigned long long(1));
 
@@ -845,8 +843,8 @@ public:
         while (j >= 0)
         {
             //вычисляем приблеженный остаток и частное
-            _q = (unsigned long long(u.coef[j + n]) * (unsigned long long(1) << BASE_SIZE) + unsigned long long(u.coef[j + n - 1])) / unsigned long long(v.coef[n - 1]);
-            _r = (unsigned long long(u.coef[j + n]) * (unsigned long long(1) << BASE_SIZE) + unsigned long long(u.coef[j + n - 1])) % unsigned long long(v.coef[n - 1]);
+            _q = ((unsigned long long(u.coef[j + n]) << BASE_SIZE) + unsigned long long(u.coef[j + n - 1])) / unsigned long long(v.coef[n - 1]);
+            _r = ((unsigned long long(u.coef[j + n]) << BASE_SIZE) + unsigned long long(u.coef[j + n - 1])) % unsigned long long(v.coef[n - 1]);
 
             if (_q == (DBASE(1) << BASE_SIZE) || _q * v.coef[n - 2] > (DBASE(1) << BASE_SIZE) * _r + u.coef[j + n - 2])
             {
@@ -859,7 +857,6 @@ public:
                 if (_q == (DBASE(1) << BASE_SIZE) || _q * v.coef[n - 2] > (DBASE(1) << BASE_SIZE) * _r + u.coef[j + n - 2])
                 {
                     _q--;
-                    _r = _r + v.coef[n - 1];
                 }
             }
 
@@ -1016,8 +1013,8 @@ public:
         while (j >= 0)
         {
             //вычисляем приблеженный остаток и частное
-            _q = (unsigned long long(u.coef[j + n]) * (unsigned long long(1) << BASE_SIZE) + unsigned long long(u.coef[j + n - 1])) / unsigned long long(v.coef[n - 1]);
-            _r = (unsigned long long(u.coef[j + n]) * (unsigned long long(1) << BASE_SIZE) + unsigned long long(u.coef[j + n - 1])) % unsigned long long(v.coef[n - 1]);
+            _q = ((unsigned long long(u.coef[j + n]) << BASE_SIZE) + unsigned long long(u.coef[j + n - 1])) / unsigned long long(v.coef[n - 1]);
+            _r = ((unsigned long long(u.coef[j + n]) << BASE_SIZE) + unsigned long long(u.coef[j + n - 1])) % unsigned long long(v.coef[n - 1]);
 
             if (_q == (DBASE(1) << BASE_SIZE) || _q * v.coef[n - 2] > (DBASE(1) << BASE_SIZE) * _r + u.coef[j + n - 2])
             {
@@ -1030,7 +1027,6 @@ public:
                 if (_q == (DBASE(1) << BASE_SIZE) || _q * v.coef[n - 2] > (DBASE(1) << BASE_SIZE) * _r + u.coef[j + n - 2])
                 {
                     _q--;
-                    _r = _r + v.coef[n - 1];
                 }
             }
 
@@ -1105,8 +1101,10 @@ int main()
         B,
         C,
         D;
+    srand(time(NULL));
+
     while (T--)
-    {
+    {        
         int n = rand() % M + 1,
         m = rand() % M + 1;
 
@@ -1132,6 +1130,9 @@ int main()
                 good_count++;
             }
         }
+        cout << "T " << T << endl;
+        cout << "n " << n << endl;
+        cout << "m " << m << endl;
     }
 
     if (good_count ==1000)
