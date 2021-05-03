@@ -10,7 +10,12 @@ typedef unsigned long long DBASE;
 #define BASE_SIZE (sizeof (BASE)*8)
 using namespace std;
 
+//0  1
+//b6 21
+//21b6
+
 class bnum {
+public:
     int len = 0;          //используемая память
     int max_len = 0;      //выделеная память
     BASE* coef = nullptr; //массив коэфициентов
@@ -30,7 +35,30 @@ class bnum {
         }
     }
 
-public:
+    bnum(string s)
+    {
+        size_t len_s=s.length();
+
+
+        if (coef != nullptr)
+        {
+            delete[] coef;
+            coef = nullptr;
+        }
+        max_len = len = 1;
+        coef = new BASE[max_len];
+        coef[0] = 0;
+
+        size_t j = 0;
+        BASE basis = 10;
+
+        while (j < len_s)
+        {
+            *this = *this * basis + BASE(s[j] - '0');
+            j++;
+        }
+    }
+
     /* конструктор
     // maxLen - длина нулевого числа
     // random - случайные значения или нулевое число
@@ -105,7 +133,7 @@ public:
         }
 
         len = other.len;
-        max_len = other.len;
+        max_len = other.max_len;
         coef = new BASE[max_len];
 
         for (int i = 0; i < len; i++)
@@ -414,7 +442,8 @@ public:
     {
         int l = max(len, other.len) + 1,
             t = min(len, other.len),
-            j = 0, k = 0;
+            j = 0;
+        BASE k = 0;
         DBASE tmp=0;
 
         bnum res;
@@ -474,7 +503,8 @@ public:
     {
         int l = max(len, other.len) + 1,
             t = min(len, other.len),
-            j = 0, k = 0;
+            j = 0;
+        BASE k = 0;
         DBASE tmp = 0;
 
         BASE* newcoef = new BASE[l];
@@ -548,7 +578,8 @@ public:
             cout << "First number less than second try again" << endl;
             return 0;
         }
-        int j = 0, k = 0;
+        int j = 0;
+        BASE k = 0;
         DBASE tmp;
         bnum res(len);        
 
@@ -584,7 +615,8 @@ public:
         }
 
         BASE* newcoef = new BASE[len];
-        int j = 0, k = 0;
+        int j = 0;
+        BASE k = 0;
         DBASE tmp;
 
         while (j < other.len)
@@ -619,7 +651,8 @@ public:
 
     bnum operator * (const BASE other)
     {
-        int j = 0, k = 0;
+        int j = 0;
+        BASE k = 0;
         DBASE tmp;
         bnum res(len + 1);
         
@@ -651,7 +684,8 @@ public:
                 j++;
                 continue;
             }
-            int k = 0, i = 0;
+            int i = 0;
+            BASE k = 0;
 
             //умножение
             while (i < len)
@@ -685,7 +719,8 @@ public:
                 j++;
                 continue;
             }
-            int k = 0, i = 0;
+            int i = 0;
+            BASE k = 0;
 
             //умножение
             while (i < len)
@@ -758,9 +793,137 @@ public:
             res.coef[0] = 1;
             return res;
         }
-        //t = len
-        //n = other.len
-        bnum res(len);
+        if (other.len==1)
+        {
+            BASE num = other.coef[0];
+            bnum res;
+            res = *this / num;
+            return res;
+        }
+
+        //делимое
+        bnum u = *this;
+
+        //делитель
+        bnum v = other;
+
+        //длинна делителя
+        int n = v.len;
+
+        //длина делимого
+        int m = u.len - n;        
+
+        //шаг D1 нормализация
+        DBASE d;
+        d = (unsigned long long(1) << BASE_SIZE) / (unsigned long long(v.coef[n - 1]) + unsigned long long(1));
+
+        u = u * BASE(d);
+        v = v * BASE(d);
+
+        //дозапись в начало делимого 0
+        if (u.len-n==m)
+        {
+            BASE* newcoef = new BASE[long long(u.len) + 1];
+            for (int i = 0; i < u.len; i++)
+            {
+                newcoef[i] = u.coef[i];
+            }
+            newcoef[u.len] = 0;
+            delete[] u.coef;
+            u.coef = newcoef;
+            u.max_len++;
+            u.len++;
+        }
+        
+        //начальная установка
+        int j = m;
+        bool k = false;
+        BASE* q = new BASE[long long(m) + 1];
+        DBASE _q, _r;
+
+        //цикл по j, дает один разряд частного по j
+        while (j >= 0)
+        {
+            //вычисляем приблеженный остаток и частное
+            _q = (unsigned long long(u.coef[j + n]) * (unsigned long long(1) << BASE_SIZE) + unsigned long long(u.coef[j + n - 1])) / unsigned long long(v.coef[n - 1]);
+            _r = (unsigned long long(u.coef[j + n]) * (unsigned long long(1) << BASE_SIZE) + unsigned long long(u.coef[j + n - 1])) % unsigned long long(v.coef[n - 1]);
+
+            if (_q == (DBASE(1) << BASE_SIZE) || _q * v.coef[n - 2] > (DBASE(1) << BASE_SIZE) * _r + u.coef[j + n - 2])
+            {
+                _q--;
+                _r = _r + v.coef[n - 1];
+            }
+
+            if (_r < (DBASE(1) << BASE_SIZE))
+            {
+                if (_q == (DBASE(1) << BASE_SIZE) || _q * v.coef[n - 2] > (DBASE(1) << BASE_SIZE) * _r + u.coef[j + n - 2])
+                {
+                    _q--;
+                    _r = _r + v.coef[n - 1];
+                }
+            }
+
+            //из соответствующей части делимого вычитаем делитель умноженный на _q
+            bnum u_temp(n + 1);
+            for (int i = j; i <= j + n; i++)
+            {
+                u_temp.coef[i - j] = u.coef[i];
+            }
+
+            u_temp.len = n + 1;
+            bnum v_temp;
+            v_temp = v * BASE(_q);
+
+            //проверяем левая часть меньше правой если да
+            //то сделаем займ (добавим слева 1)
+            if (u_temp < v_temp)
+            {
+                BASE* newcoef = new BASE[long long(u_temp.len) + 1];
+                for (int i = 0; i < u_temp.len; i++)
+                {
+                    newcoef[i] = u_temp.coef[i];
+                }
+                newcoef[u_temp.len] = 1;
+                delete[] u_temp.coef;
+                u_temp.coef = newcoef;
+                u_temp.max_len++;
+                u_temp.len++;
+                k = true;
+            }
+            else
+            {
+                k = false;
+            }
+
+            u_temp = u_temp - v_temp;
+            int pred_len = u_temp.len;
+            q[j] = _q;
+
+            if (k)
+            {
+                //компенсация сложения
+                q[j]--;
+                u_temp += v;
+            }
+
+            for (int i = j; i <= j+n; i++)
+            {
+                if (i-j>pred_len-1)
+                {
+                    u.coef[i] = 0;
+                    continue;
+                }
+                u.coef[i] = u_temp.coef[i-j];
+            }
+            u.del_zeros();
+            j--;
+        }
+
+        bnum res;
+        delete[]res.coef;
+        res.coef = q;
+        res.max_len = m + 1;
+        res.len = m + 1;
 
         return res;
     }
@@ -794,7 +957,7 @@ public:
         }
         if (*this < other)
         {
-            bnum res=other;
+            bnum res = *this;
             return res;
         }
         if (*this == other)
@@ -802,44 +965,183 @@ public:
             bnum res;
             return res;
         }
+        if (other.len == 1)
+        {
+            BASE num = other.coef[0];
+            bnum res;
+            res = *this % num;
+            return res;
+        }
+        //делимое
+        bnum u = *this;
 
-        bnum res(other.len);
+        //делитель
+        bnum v = other;
 
-        return res;
+        //длинна делителя
+        int n = v.len;
+
+        //длина делимого
+        int m = u.len - n;
+
+        //шаг D1 нормализация
+        DBASE d;
+        d = (unsigned long long(1) << BASE_SIZE) / (unsigned long long(v.coef[n - 1]) + unsigned long long(1));
+
+        u = u * BASE(d);
+        v = v * BASE(d);
+
+        //дозапись в начало делимого 0
+        if (u.len - n == m)
+        {
+            BASE* newcoef = new BASE[long long(u.len) + 1];
+            for (int i = 0; i < u.len; i++)
+            {
+                newcoef[i] = u.coef[i];
+            }
+            newcoef[u.len] = 0;
+            delete[] u.coef;
+            u.coef = newcoef;
+            u.max_len++;
+            u.len++;
+        }
+
+        //начальная установка
+        int j = m;
+        bool k = false;
+        BASE* q = new BASE[long long(m) + 1];
+        DBASE _q, _r;
+
+        //цикл по j, дает один разряд частного по j
+        while (j >= 0)
+        {
+            //вычисляем приблеженный остаток и частное
+            _q = (unsigned long long(u.coef[j + n]) * (unsigned long long(1) << BASE_SIZE) + unsigned long long(u.coef[j + n - 1])) / unsigned long long(v.coef[n - 1]);
+            _r = (unsigned long long(u.coef[j + n]) * (unsigned long long(1) << BASE_SIZE) + unsigned long long(u.coef[j + n - 1])) % unsigned long long(v.coef[n - 1]);
+
+            if (_q == (DBASE(1) << BASE_SIZE) || _q * v.coef[n - 2] > (DBASE(1) << BASE_SIZE) * _r + u.coef[j + n - 2])
+            {
+                _q--;
+                _r = _r + v.coef[n - 1];
+            }
+
+            if (_r < (DBASE(1) << BASE_SIZE))
+            {
+                if (_q == (DBASE(1) << BASE_SIZE) || _q * v.coef[n - 2] > (DBASE(1) << BASE_SIZE) * _r + u.coef[j + n - 2])
+                {
+                    _q--;
+                    _r = _r + v.coef[n - 1];
+                }
+            }
+
+            //из соответствующей части делимого вычитаем делитель умноженный на _q
+            bnum u_temp(n + 1);
+            for (int i = j; i <= j + n; i++)
+            {
+                u_temp.coef[i - j] = u.coef[i];
+            }
+
+            u_temp.len = n + 1;
+            bnum v_temp;
+            v_temp = v * BASE(_q);
+
+            //проверяем левая часть меньше правой если да
+            //то сделаем займ (добавим слева 1)
+            if (u_temp < v_temp)
+            {
+                BASE* newcoef = new BASE[long long(u_temp.len) + 1];
+                for (int i = 0; i < u_temp.len; i++)
+                {
+                    newcoef[i] = u_temp.coef[i];
+                }
+                newcoef[u_temp.len] = 1;
+                delete[] u_temp.coef;
+                u_temp.coef = newcoef;
+                u_temp.max_len++;
+                u_temp.len++;
+                k = true;
+            }
+            else
+            {
+                k = false;
+            }
+
+            u_temp = u_temp - v_temp;
+            int pred_len = u_temp.len;
+            q[j] = _q;
+
+            if (k)
+            {
+                //компенсация сложения
+                q[j]--;
+                u_temp += v;
+            }
+
+            for (int i = j; i <= j + n; i++)
+            {
+                if (i - j > pred_len - 1)
+                {
+                    u.coef[i] = 0;
+                    continue;
+                }
+                u.coef[i] = u_temp.coef[i - j];
+            }
+            u.del_zeros();
+            j--;
+        }
+
+        u = u / BASE(d);        
+
+        return u;
     }
 };
 
 int main()
 {
-    bnum divisible, remnant, quotient, num_res;
-    BASE divisor;
-    cin >> divisible;
-    cin>> divisor;
-
-    cout << divisible << endl;
-    cout << divisor << endl;
-    cout << divisible << endl;
-    cout << divisor << endl;
-
-    
-    quotient = divisible / divisor;
-    cout << "quotient: "<< divisible<<" / "<< divisor<<" = " << quotient << endl;
-
-    remnant = divisible % divisor;
-    cout << "remnant: " << divisible << " % " << divisor << " = " << remnant << endl;
-
-    num_res = quotient * divisor;
-    num_res += remnant;
-    if (num_res == divisible)
+    int M = 1000,
+        T = 1000,
+        good_count = 0;
+    bnum A,
+        B,
+        C,
+        D;
+    while (T--)
     {
-        cout << endl;
-        cout << quotient << " * " <<  divisor  << " + " << remnant << " = " << divisible << endl;
-        cout << "Verification was successful" << endl;
+        int n = rand() % M + 1,
+        m = rand() % M + 1;
+
+        bnum AA(n, true),
+        BB(m, true);
+        A = AA;
+        B = BB;
+
+        C = A / B;
+        D = A % B;
+
+        if (n>=m)
+        {
+            if (A == C * B + D && A - D == C * B && D < B)
+            {
+                good_count++;
+            }
+        }
+        else
+        {
+            if (A == C * B + D && D < B)
+            {
+                good_count++;
+            }
+        }
+    }
+
+    if (good_count ==1000)
+    {
+        cout << "Good" << endl;
     }
     else
     {
-        cout << "Something wrong with operations" << endl;
+        cout << "BAD" << endl;
     }
-    
+
     return 0;
 }
