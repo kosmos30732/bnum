@@ -1147,24 +1147,84 @@ public:
 		return z;
 	}
 
-	void pr()
+	//-right
+	//+left
+	bnum shift(int shift)
 	{
-		for (int i = len - 1; i >= 0; --i)
+		int n = (len - 1) * BASE_SIZE;
+		int idx = BASE_SIZE - 1;
+		while (true)
 		{
-			cout << coef[i] << " ";
+			if (coef[len - 1] & (1 << idx))
+			{
+				n += idx + 1;
+				break;
+			}
+			idx--;
 		}
-		cout << endl;
-		for (int i = len-1; i>=0; i--)
+		if (shift == 0)
 		{
-			cout << bitset<sizeof(coef[i]) * 8>(coef[i]) << " ";
+			bnum res = *this;
+			return res;
 		}
-		cout << endl;
+		if (shift < 0)
+		{
+			if (abs(shift) > n - 1)
+			{
+				bnum res(1);
+				return res;
+			}
+			int count_base = abs(shift) / (BASE_SIZE);
+			int count_bit_shift = abs(shift) % (BASE_SIZE);
+
+			bnum res(len);
+			for (int i = count_base; i < len; i++)
+			{
+				res.coef[i - count_base] |= (coef[i] >> count_bit_shift);
+				if (i + 1 < len)
+				{
+					res.coef[i - count_base] |= (coef[i + 1] << (BASE_SIZE - count_bit_shift));
+				}
+			}
+
+			res.del_zeros();
+
+			return res;
+		}
+		else
+		{
+			int count_base = shift / (BASE_SIZE);
+			int count_bit_shift = shift % (BASE_SIZE);
+			bnum res(len + count_base + 1);
+
+			for (int i = 0; i < len; i++)
+			{
+				res.coef[i + count_base] |= (coef[i] << count_bit_shift);
+				if (i + 1 < len)
+				{
+					res.coef[i + count_base + 1] |= (coef[i] >> (BASE_SIZE - count_bit_shift));
+				}
+			}
+
+			res.del_zeros();
+
+			return res;
+		}
 	}
+
+
+	bnum barret(bnum m, bnum z)
+	{
+
+	}
+
 };
 
 int main()
 {
 	srand(time(NULL));
+
+	
 
 	//int N = 20, M = 6000;
 	//for (size_t i = 0; i < N; i++)
@@ -1208,62 +1268,62 @@ int main()
 	//	cout << num_fast << endl;
 	//}
 	
-	bnum x, y;
-	cin >> x;
-	cin >> y;
-	bnum xx = x.sqr_in(y);
+	//bnum x, y;
+	//cin >> x;
+	//cin >> y;
+	//bnum xx = x.sqr_in(y);
 
-	cout << xx << endl;
+	//cout << xx << endl;
 
-	//int M = 1000,
-	//	T = 1000,
-	//	good_count = 0;
-	//bnum A,
-	//	B,
-	//	C,
-	//	D;
-	//srand(time(NULL));
+	int M = 1000,
+		T = 1000,
+		good_count = 0;
+	bnum A,
+		B,
+		C,
+		D;
+	srand(time(NULL));
 
-	//while (T--)
-	//{
-	//	int n = rand() % M + 1,
-	//		m = rand() % M + 1;
+	while (T--)
+	{
+		int n = rand() % M + 1,
+			m = rand() % M + 1;
 
-	//	bnum AA(n, true),
-	//		BB(m, true);
-	//	A = AA;
-	//	B = BB;
+		bnum AA(n, true),
+			BB(m, true);
+		A = AA;
+		B = BB;
 
-	//	C = A / B;
-	//	D = A % B;
+		C = A / B;
+		D = A % B;
 
-	//	if (n >= m)
-	//	{
-	//		if (A == C * B + D && A - D == C * B && D < B)
-	//		{
-	//			good_count++;
-	//		}
-	//	}
-	//	else
-	//	{
-	//		if (A == C * B + D && D < B)
-	//		{
-	//			good_count++;
-	//		}
-	//	}
-	//	cout << "T " << T << endl;
-	//	cout << "n " << n << endl;
-	//	cout << "m " << m << endl;
-	//}
+		if (n >= m)
+		{
+			if (A == C * B + D && A - D == C * B && D < B)
+			{
+				good_count++;
+			}
+		}
+		else
+		{
+			if (A == C * B + D && D < B)
+			{
+				good_count++;
+			}
+		}
+		//cout << "T " << T << endl;
+		//cout << "n " << n << endl;
+		//cout << "m " << m << endl;
+	}
 
-	//if (good_count == 1000)
-	//{
-	//	cout << "Good" << endl;
-	//}
-	//else
-	//{
-	//	cout << "BAD" << endl;
-	//}
+	if (good_count == 1000)
+	{
+		cout << "Good" << endl;
+	}
+	else
+	{
+		cout << "BAD" << endl;
+	}
 
 	return 0;
 }
