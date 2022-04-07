@@ -9,6 +9,7 @@
 
 typedef unsigned short BASE;
 typedef unsigned int DBASE;
+typedef unsigned long long DDBASE;
 #define BASE_SIZE (sizeof (BASE)*8)
 using namespace std;
 
@@ -144,7 +145,7 @@ public:
 	}
 
 	//16-иричный
-	
+
 	friend istream& operator >>(istream& in, bnum& cur)
 	{
 		string temp, str;
@@ -238,7 +239,7 @@ public:
 
 	friend ostream& operator <<(ostream& out, bnum& cur)
 	{
-		if (cur.coef[0]==0 && cur.len==1)
+		if (cur.coef[0] == 0 && cur.len == 1)
 		{
 			out << "0";
 			return out;
@@ -251,7 +252,7 @@ public:
 		for (int j = BASE_SIZE - 4; j >= 0; j -= 4)
 		{
 			g = temp & (cur.coef[i] >> j);
-			if (g ==0 &&f)
+			if (g == 0 && f)
 			{
 				continue;
 			}
@@ -262,19 +263,19 @@ public:
 			}
 		}
 
-		for (i = cur.len-2; i>=0; i--)
+		for (i = cur.len - 2; i >= 0; i--)
 		{
-			for (int j = BASE_SIZE-4; j>=0; j-=4)
+			for (int j = BASE_SIZE - 4; j >= 0; j -= 4)
 			{
 				g = temp & (cur.coef[i] >> j);
-				out <<int(g);
+				out << int(g);
 			}
 		}
 		out << dec;
 
 		return out;
 	}
-	
+
 	//десятичный
 	/*
 	friend istream& operator >>(istream& in, bnum& cur)
@@ -815,7 +816,7 @@ public:
 
 		//нормализация
 		DBASE d;
-		d = (unsigned long long(1) << BASE_SIZE) / (unsigned long long(v.coef[n - 1]) + unsigned long long(1));
+		d = (DDBASE(1) << BASE_SIZE) / (DDBASE(v.coef[n - 1]) + DDBASE(1));
 
 		u = u * BASE(d);
 		v = v * BASE(d);
@@ -845,8 +846,8 @@ public:
 		while (j >= 0)
 		{
 			//вычисляем приблеженный остаток и частное
-			_q = ((unsigned long long(u.coef[j + n]) << BASE_SIZE) + unsigned long long(u.coef[j + n - 1])) / unsigned long long(v.coef[n - 1]);
-			_r = ((unsigned long long(u.coef[j + n]) << BASE_SIZE) + unsigned long long(u.coef[j + n - 1])) % unsigned long long(v.coef[n - 1]);
+			_q = ((DDBASE(u.coef[j + n]) << BASE_SIZE) + DDBASE(u.coef[j + n - 1])) / DDBASE(v.coef[n - 1]);
+			_r = ((DDBASE(u.coef[j + n]) << BASE_SIZE) + DDBASE(u.coef[j + n - 1])) % DDBASE(v.coef[n - 1]);
 
 			if (_q == (DBASE(1) << BASE_SIZE) || _q * v.coef[n - 2] > (DBASE(1) << BASE_SIZE) * _r + u.coef[j + n - 2])
 			{
@@ -985,7 +986,7 @@ public:
 
 		//шаг D1 нормализация
 		DBASE d;
-		d = (unsigned long long(1) << BASE_SIZE) / (unsigned long long(v.coef[n - 1]) + unsigned long long(1));
+		d = (DDBASE(1) << BASE_SIZE) / (DDBASE(v.coef[n - 1]) + DDBASE(1));
 
 		u = u * BASE(d);
 		v = v * BASE(d);
@@ -1015,8 +1016,8 @@ public:
 		while (j >= 0)
 		{
 			//вычисляем приблеженный остаток и частное
-			_q = ((unsigned long long(u.coef[j + n]) << BASE_SIZE) + unsigned long long(u.coef[j + n - 1])) / unsigned long long(v.coef[n - 1]);
-			_r = ((unsigned long long(u.coef[j + n]) << BASE_SIZE) + unsigned long long(u.coef[j + n - 1])) % unsigned long long(v.coef[n - 1]);
+			_q = ((DDBASE(u.coef[j + n]) << BASE_SIZE) + DDBASE(u.coef[j + n - 1])) / DDBASE(v.coef[n - 1]);
+			_r = ((DDBASE(u.coef[j + n]) << BASE_SIZE) + DDBASE(u.coef[j + n - 1])) % DDBASE(v.coef[n - 1]);
 
 			if (_q == (DBASE(1) << BASE_SIZE) || _q * v.coef[n - 2] > (DBASE(1) << BASE_SIZE) * _r + u.coef[j + n - 2])
 			{
@@ -1095,24 +1096,24 @@ public:
 
 	bnum fast_sqr()
 	{
-		bnum res(2 * len+1);
-		unsigned long long tmp = 0;
+		bnum res(2 * len + 1);
+		DDBASE tmp = 0;
 		for (size_t i = 0; i < len; i++)
 		{
-			tmp = unsigned long long(res.coef[2 * i]) + unsigned long long(coef[i]) * unsigned long long(coef[i]);
+			tmp = DDBASE(res.coef[2 * i]) + DDBASE(coef[i]) * DDBASE(coef[i]);
 			//(uv)
 			res.coef[2 * i] = tmp; //v
 
 			for (size_t j = i + 1; j < len; j++)
 			{
 				unsigned int cu = tmp >> BASE_SIZE;
-				tmp = unsigned long long(res.coef[i + j]) + unsigned long long(2) * unsigned long long(coef[i]) * unsigned long long(coef[j]) + unsigned long long(cu);
+				tmp = DDBASE(res.coef[i + j]) + DDBASE(2) * DDBASE(coef[i]) * DDBASE(coef[j]) + DDBASE(cu);
 				res.coef[i + j] = tmp;
 			}
 			tmp >>= BASE_SIZE;
-			tmp += unsigned long long(res.coef[i + len]);
-			tmp += unsigned long long(res.coef[i + len + 1]) << BASE_SIZE;
-			
+			tmp += DDBASE(res.coef[i + len]);
+			tmp += DDBASE(res.coef[i + len + 1]) << BASE_SIZE;
+
 			res.coef[i + len] = tmp;
 			res.coef[i + len + 1] = tmp >> BASE_SIZE;
 		}
@@ -1126,9 +1127,9 @@ public:
 		int idx = BASE_SIZE - 1;
 		while (true)
 		{
-			if (y.coef[y.len-1] & (1<<idx))
+			if (y.coef[y.len - 1] & (1 << idx))
 			{
-				n += idx+1;
+				n += idx + 1;
 				break;
 			}
 			idx--;
@@ -1136,10 +1137,10 @@ public:
 
 		bnum z(1);
 		z = *this;
-		for (int i = n-2; i>=0; i--)
+		for (int i = n - 2; i >= 0; i--)
 		{
 			z = z.fast_sqr();
-			if (y.coef[i/BASE_SIZE] & (1 << (i%BASE_SIZE)))
+			if (y.coef[i / BASE_SIZE] & (1 << (i % BASE_SIZE)))
 			{
 				z = z * (*this);
 			}
@@ -1224,7 +1225,7 @@ int main()
 {
 	srand(time(NULL));
 
-	
+
 
 	//int N = 20, M = 6000;
 	//for (size_t i = 0; i < N; i++)
@@ -1247,8 +1248,6 @@ int main()
 	//auto end = chrono::steady_clock::now();
 	//auto ms = chrono::duration_cast<chrono::milliseconds>(end - begin);
 	//cout << "Time fast_sqr: " << ms.count() << endl;
-
-
 	//begin = chrono::steady_clock::now();
 	//for (size_t i = 0; i < N; i++)
 	//{
@@ -1267,63 +1266,57 @@ int main()
 	//	bnum num_fast = num.fast_sqr();
 	//	cout << num_fast << endl;
 	//}
-	
+
 	//bnum x, y;
 	//cin >> x;
 	//cin >> y;
 	//bnum xx = x.sqr_in(y);
-
 	//cout << xx << endl;
 
-	int M = 1000,
-		T = 1000,
-		good_count = 0;
-	bnum A,
-		B,
-		C,
-		D;
-	srand(time(NULL));
-
-	while (T--)
-	{
-		int n = rand() % M + 1,
-			m = rand() % M + 1;
-
-		bnum AA(n, true),
-			BB(m, true);
-		A = AA;
-		B = BB;
-
-		C = A / B;
-		D = A % B;
-
-		if (n >= m)
-		{
-			if (A == C * B + D && A - D == C * B && D < B)
-			{
-				good_count++;
-			}
-		}
-		else
-		{
-			if (A == C * B + D && D < B)
-			{
-				good_count++;
-			}
-		}
-		//cout << "T " << T << endl;
-		//cout << "n " << n << endl;
-		//cout << "m " << m << endl;
-	}
-
-	if (good_count == 1000)
-	{
-		cout << "Good" << endl;
-	}
-	else
-	{
-		cout << "BAD" << endl;
-	}
+	//int M = 1000,
+	//	T = 1000,
+	//	good_count = 0;
+	//bnum A,
+	//	B,
+	//	C,
+	//	D;
+	//srand(time(NULL));
+	//while (T--)
+	//{
+	//	int n = rand() % M + 1,
+	//		m = rand() % M + 1;
+	//	bnum AA(n, true),
+	//		BB(m, true);
+	//	A = AA;
+	//	B = BB;
+	//	C = A / B;
+	//	D = A % B;
+	//	if (n >= m)
+	//	{
+	//		if (A == C * B + D && A - D == C * B && D < B)
+	//		{
+	//			good_count++;
+	//		}
+	//	}
+	//	else
+	//	{
+	//		if (A == C * B + D && D < B)
+	//		{
+	//			good_count++;
+	//		}
+	//	}
+	//	//cout << "T " << T << endl;
+	//	//cout << "n " << n << endl;
+	//	//cout << "m " << m << endl;
+	//}
+	//if (good_count == 1000)
+	//{
+	//	cout << "Good" << endl;
+	//}
+	//else
+	//{
+	//	cout << "BAD" << endl;
+	//}
 
 	return 0;
 }
