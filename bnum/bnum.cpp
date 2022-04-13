@@ -1,11 +1,11 @@
-﻿#include <iostream>
-#include <cstddef>
-#include <ctime>
-#include <cstdint>
-#include <string>
-#include <fstream>
+﻿#include <bitset>
 #include <chrono>
-#include <bitset>
+#include <cstddef>
+#include <cstdint>
+#include <ctime>
+#include <fstream>
+#include <iostream>
+#include <string>
 
 typedef unsigned short BASE;
 typedef unsigned int DBASE;
@@ -1152,17 +1152,6 @@ public:
 	//+left
 	bnum shift(int shift)
 	{
-		int n = (len - 1) * BASE_SIZE;
-		int idx = BASE_SIZE - 1;
-		while (true)
-		{
-			if (coef[len - 1] & (1 << idx))
-			{
-				n += idx + 1;
-				break;
-			}
-			idx--;
-		}
 		if (shift == 0)
 		{
 			bnum res = *this;
@@ -1170,62 +1159,115 @@ public:
 		}
 		if (shift < 0)
 		{
-			if (abs(shift) > n - 1)
+			if ((-shift) >=len )
 			{
 				bnum res(1);
 				return res;
 			}
-			int count_base = abs(shift) / (BASE_SIZE);
-			int count_bit_shift = abs(shift) % (BASE_SIZE);
-
-			bnum res(len);
-			for (int i = count_base; i < len; i++)
+			
+			bnum res(len+shift);
+			for (int i = (-shift); i < len; i++)
 			{
-				res.coef[i - count_base] |= (coef[i] >> count_bit_shift);
-				if (i + 1 < len)
-				{
-					res.coef[i - count_base] |= (coef[i + 1] << (BASE_SIZE - count_bit_shift));
-				}
+				res.coef[i +shift] = coef[i];
 			}
-
 			res.del_zeros();
-
 			return res;
 		}
 		else
 		{
-			int count_base = shift / (BASE_SIZE);
-			int count_bit_shift = shift % (BASE_SIZE);
-			bnum res(len + count_base + 1);
+			bnum res(len +shift);
 
 			for (int i = 0; i < len; i++)
 			{
-				res.coef[i + count_base] |= (coef[i] << count_bit_shift);
-				if (i + 1 < len)
-				{
-					res.coef[i + count_base + 1] |= (coef[i] >> (BASE_SIZE - count_bit_shift));
-				}
+				res.coef[i + shift] |= coef[i];
 			}
-
 			res.del_zeros();
-
 			return res;
 		}
 	}
 
-
 	bnum barret(bnum m, bnum z)
 	{
+		if (!(len <=2*m.len))
+		{
+			cout << "This algrithm can not work with this numbers" << endl;
+			bnum res(1);
+			return res;
+		}
+		bnum q_ = (*this).shift(-(m.len - 1)) * z;
+		q_ = q_.shift(-(m.len + 1));
 
+		bnum r1 = *this, r2 = q_ * m, r_(1);
+		if (r1>=r2)
+		{
+			r_ = r1 - r2;
+		}
+		else
+		{
+			r_.coef[0] = 1;
+			r_ = r_.shift(m.len + 1) + r1 - r2;
+		}
+
+		while (r_>=m)
+		{
+			r_ = r_ - m;
+		}
+
+		return r_;
 	}
 
+	bnum barret_z(bnum m)
+	{
+		bnum z(1);
+		z.coef[0] = 1;
+		z = z.shift(2 * m.len) / m;
+		return z;
+	}
 };
 
 int main()
 {
 	srand(time(NULL));
 
-
+	int N = 1000, M = 2000;
+	bnum m(M / 2 + M / 4,true);
+	bnum z = m.barret_z(m);
+	for (size_t i = 0; i < N; i++)
+	{
+		bnum x(M, true);
+		bnum x_mod = x % m;
+		bnum x_barret = x.barret(m, z);
+		if (x_barret!=x_mod)
+		{
+			cout << "Fail on test: " <<i<< endl;
+		}
+		if (i%100==0 && i>0)
+		{
+			cout << "Done " << i << " tests\n" << endl;
+		}
+	}
+	cout <<"Done cmp test\n"<< endl;
+	int NN = 1000, MM = 2000;
+	bnum mm(MM / 2 + MM / 4, true);
+	bnum zz = mm.barret_z(mm);
+	auto begin = chrono::steady_clock::now();
+	for (size_t i = 0; i < NN; i++)
+	{
+		bnum xx(M, true);
+		bnum x_barret = xx.barret(mm, zz);
+	}
+	auto end = chrono::steady_clock::now();
+	auto ms = chrono::duration_cast<chrono::milliseconds>(end - begin);
+	cout << "Time barret: " << ms.count() << endl;
+	begin = chrono::steady_clock::now();
+	for (size_t i = 0; i < NN; i++)
+	{
+		bnum xx(M, true);
+		bnum x_mod = xx % mm;
+	}
+	end = chrono::steady_clock::now();
+	ms = chrono::duration_cast<chrono::milliseconds>(end - begin);
+	cout << "Time mod: " << ms.count() << endl;
 
 	//int N = 20, M = 6000;
 	//for (size_t i = 0; i < N; i++)
