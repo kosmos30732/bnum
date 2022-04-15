@@ -150,7 +150,7 @@ public:
 	{
 		string temp, str;
 		in >> temp;
-		int temp_len = temp.length();
+		int temp_len = int(temp.length());
 		int count = 0; bool f = true;
 		for (int i = 0; i < temp_len; i++)
 		{
@@ -174,7 +174,7 @@ public:
 			exit(1);
 		}
 		temp.erase(0, count);
-		temp_len = temp.length();
+		temp_len = int(temp.length());
 		if (temp_len == 0)
 		{
 			if (cur.coef != nullptr)
@@ -200,7 +200,7 @@ public:
 		}
 
 		str += temp;
-		int i = str.length();
+		int i = int(str.length());
 		cur.max_len = i / fours;
 		cur.len = cur.max_len;
 
@@ -709,49 +709,8 @@ public:
 
 	bnum& operator *= (bnum& other)
 	{
-		int j = 0;
-		DBASE tmp;
-		bnum res(len + other.len);
-		while (j < other.len)
-		{
-			//если коэффициент 2-ого множителя равен нулю то пропуск
-			if (other.coef[j] == 0)
-			{
-				j++;
-				continue;
-			}
-			int i = 0;
-			BASE k = 0;
-
-			//умножение
-			while (i < len)
-			{
-				tmp = DBASE(coef[i]) * DBASE(other.coef[j]) + DBASE(res.coef[i + j]) + DBASE(k);
-				res.coef[i + j] = tmp;
-				k = tmp >> BASE_SIZE;
-				i++;
-			}
-			//перенос записать
-			//длина 1 числа плюс сдвиг
-			res.coef[j + len] = k;
-			j++;
-		}
-
-		res.del_zeros();
-
-		if (coef != nullptr)
-		{
-			delete[] coef;
-			coef = nullptr;
-		}
-
-		coef = res.coef;
-		res.coef = nullptr;
-
-		max_len = res.max_len;
-		len = res.len;
-
-		return *this;
+		bnum res = (*this) * other;
+		return res;
 	}
 
 	bnum operator / (const BASE other)
@@ -1159,23 +1118,23 @@ public:
 		}
 		if (shift < 0)
 		{
-			if ((-shift) >=len )
+			if ((-shift) >= len)
 			{
 				bnum res(1);
 				return res;
 			}
-			
-			bnum res(len+shift);
+
+			bnum res(len + shift);
 			for (int i = (-shift); i < len; i++)
 			{
-				res.coef[i +shift] = coef[i];
+				res.coef[i + shift] = coef[i];
 			}
 			res.del_zeros();
 			return res;
 		}
 		else
 		{
-			bnum res(len +shift);
+			bnum res(len + shift);
 
 			for (int i = 0; i < len; i++)
 			{
@@ -1188,7 +1147,7 @@ public:
 
 	bnum barret(bnum m, bnum z)
 	{
-		if (!(len <=2*m.len))
+		if (!(len <= 2 * m.len))
 		{
 			cout << "This algrithm can not work with this numbers" << endl;
 			bnum res(1);
@@ -1198,7 +1157,7 @@ public:
 		q_ = q_.shift(-(m.len + 1));
 
 		bnum r1 = *this, r2 = q_ * m, r_(1);
-		if (r1>=r2)
+		if (r1 >= r2)
 		{
 			r_ = r1 - r2;
 		}
@@ -1208,7 +1167,7 @@ public:
 			r_ = r_.shift(m.len + 1) + r1 - r2;
 		}
 
-		while (r_>=m)
+		while (r_ >= m)
 		{
 			r_ = r_ - m;
 		}
@@ -1227,26 +1186,26 @@ public:
 
 int main()
 {
-	srand(time(NULL));
+	srand(unsigned int(time(NULL)));
 
 	int N = 1000, M = 2000;
-	bnum m(M / 2 + M / 4,true);
+	bnum m(M / 2 + M / 4, true);
 	bnum z = m.barret_z(m);
 	for (size_t i = 0; i < N; i++)
 	{
 		bnum x(M, true);
 		bnum x_mod = x % m;
 		bnum x_barret = x.barret(m, z);
-		if (x_barret!=x_mod)
+		if (x_barret != x_mod)
 		{
-			cout << "Fail on test: " <<i<< endl;
+			cout << "Fail on test: " << i << endl;
 		}
-		if (i%100==0 && i>0)
+		if (i % 100 == 0 && i > 0)
 		{
-			cout << "Done " << i << " tests\n" << endl;
+			cout << "Done " << i << " tests\n";
 		}
 	}
-	cout <<"Done cmp test\n"<< endl;
+	cout << "\tDone cmp test\n" << endl;
 	int NN = 1000, MM = 2000;
 	bnum mm(MM / 2 + MM / 4, true);
 	bnum zz = mm.barret_z(mm);
@@ -1268,6 +1227,16 @@ int main()
 	end = chrono::steady_clock::now();
 	ms = chrono::duration_cast<chrono::milliseconds>(end - begin);
 	cout << "Time mod: " << ms.count() << endl;
+	while (true)
+	{
+		bnum x;
+		cin >> x;
+		bnum m;
+		cin >> m;
+		bnum z = m.barret_z(m);
+		bnum res = x.barret(m, z);
+		cout << res << endl;
+	}
 
 	//int N = 20, M = 6000;
 	//for (size_t i = 0; i < N; i++)
