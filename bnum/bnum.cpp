@@ -1150,13 +1150,13 @@ public:
 		if (!(len <= 2 * m.len))
 		{
 			cout << "This algrithm can not work with this numbers" << endl;
-			bnum res(1);
+			bnum res;
 			return res;
 		}
-		bnum q_ = (*this).shift(-(m.len - 1)) * z;
-		q_ = q_.shift(-(m.len + 1));
+		bnum q_ = ((*this).shift(-(m.len - 1)) * z).shift(-(m.len + 1));
 
-		bnum r1 = *this, r2 = q_ * m, r_(1);
+		bnum r1 = *this, r2 = q_ * m, r_;
+		
 		if (r1 >= r2)
 		{
 			r_ = r1 - r2;
@@ -1177,7 +1177,7 @@ public:
 
 	bnum barret_z(bnum m)
 	{
-		bnum z(1);
+		bnum z;
 		z.coef[0] = 1;
 		z = z.shift(2 * m.len) / m;
 		return z;
@@ -1188,6 +1188,7 @@ int main()
 {
 	srand(unsigned int(time(NULL)));
 
+	//test 3
 	int N = 1000, M = 2000;
 	bnum m(M / 2 + M / 4, true);
 	bnum z = m.barret_z(m);
@@ -1238,6 +1239,7 @@ int main()
 		cout << res << endl;
 	}
 
+	//test 1
 	//int N = 20, M = 6000;
 	//for (size_t i = 0; i < N; i++)
 	//{
@@ -1278,12 +1280,14 @@ int main()
 	//	cout << num_fast << endl;
 	//}
 
+	//test 2
 	//bnum x, y;
 	//cin >> x;
 	//cin >> y;
 	//bnum xx = x.sqr_in(y);
 	//cout << xx << endl;
 
+	//test ZERO
 	//int M = 1000,
 	//	T = 1000,
 	//	good_count = 0;
