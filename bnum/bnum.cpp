@@ -6,12 +6,96 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <cmath>
+#include <iomanip>
 
 typedef unsigned short BASE;
 typedef unsigned int DBASE;
 typedef unsigned long long DDBASE;
 #define BASE_SIZE (sizeof (BASE)*8)
 using namespace std;
+
+unsigned long long fi(unsigned long long n)
+{
+	unsigned long long f = n;
+	if (n % 2 == 0)
+	{
+		while (n % 2 == 0)
+		{
+			n /= 2;
+		}
+		f /= 2;
+	}
+	for (unsigned long long i = 3; i * i <= n; i += 2)
+	{
+		if (n % i == 0)
+		{
+			while (n % i == 0)
+			{
+				n /= i;
+			}
+			f /= i;
+			f *= (i - 1);
+		}
+	}
+	if (n > 1)
+	{
+		f /= n;
+		f *= (n - 1);
+	}
+
+	return f;
+}
+
+int jacobi(int a, int n)
+{
+	if (a == 0)
+	{
+		return 0;
+	}
+	if (a == 1)
+	{
+		return 1;
+	}
+
+	int k = 0;
+	while (a % 2 == 0)
+	{
+		k++;
+		a = a / 2;
+	}
+
+	int s;
+	if (k % 2 == 0)
+	{
+		s = 1;
+	}
+	else
+	{
+		if (n % 8 == 1 || n % 8 == 7)
+		{
+			s = 1;
+		}
+		else
+		{
+			s = -1;
+		}
+	}
+
+	if (n % 4 == 3 && a % 4 == 3)
+	{
+		s = -s;
+	}
+
+	if (a == 1)
+	{
+		return s;
+	}
+	else
+	{
+		return s * jacobi(n % a, a);
+	}
+}
 
 //0  1
 //b6 21
@@ -1156,7 +1240,7 @@ public:
 		bnum q_ = ((*this).shift(-(m.len - 1)) * z).shift(-(m.len + 1));
 
 		bnum r1 = *this, r2 = q_ * m, r_;
-		
+
 		if (r1 >= r2)
 		{
 			r_ = r1 - r2;
@@ -1182,62 +1266,207 @@ public:
 		z = z.shift(2 * m.len) / m;
 		return z;
 	}
+
+	bnum sqr_in_mod(bnum a, bnum n)
+	{
+		bnum res;
+		bnum n_1(1);
+		n_1.coef[0] = 1;
+		n_1 = n - n_1;
+
+		res = a.sqr_in(n_1);
+		res = res % n;
+		return res;
+	}
+
+	bnum sqr_in_mod_solov_shtras(bnum a, bnum n)
+	{
+		bnum res;
+		bnum n_1(1);
+		n_1.coef[0] = 1;
+		n_1 = n - n_1;
+		bnum n_2;
+		n_2.coef[0] = 2;
+		n_1 = n_1 / n_2;
+
+		res = a.sqr_in(n_1);
+		res = res % n;
+		return res;
+	}
+
+	bool test_ferma(int t)
+	{
+		while (t--)
+		{
+			bnum a;
+			while (true)
+			{
+				bnum a_tmp(1, true);
+				if (a_tmp.coef[0] >= 2 && a_tmp.coef[0] <= coef[0] - 2)
+				{
+					a = a_tmp;
+					break;
+				}
+			}
+
+			bnum res = a.sqr_in_mod(a, *this);
+			if (res.coef[0] != 1)
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	float eps_Ferma(bnum n, int t)
+	{
+		return pow((static_cast<float>(fi(n.coef[0])) / n.coef[0]), t);
+	}
+
+	float eps_solov_shtras(bnum n, int t)
+	{
+		return pow((static_cast<float>(fi(n.coef[0])) / (n.coef[0] * 2)), t);
+	}
+
+	bool solov_shtras(int t)
+	{
+		while (t--)
+		{
+			bnum a;
+			while (true)
+			{
+				bnum a_tmp(1, true);
+				if (a_tmp.coef[0] >= 2 && a_tmp.coef[0] <= coef[0] - 2)
+				{
+					a = a_tmp;
+					break;
+				}
+			}
+
+			bnum res = a.sqr_in_mod_solov_shtras(a, *this);
+			if (res.coef[0] != 1 && res.coef[0] != (coef[0] - 1))
+			{
+				return false;
+			}
+
+			int s = jacobi(a.coef[0], coef[0]);
+			s = (s + coef[0]) % coef[0];
+			if (res.coef[0] != s)
+			{
+
+				return false;
+			}
+		}
+
+		return true;
+	}
 };
+
 
 int main()
 {
 	srand(unsigned int(time(NULL)));
+	int times = 13;
+	for (int i = 0; i < 6; i++)
+	{
+		bnum rnd(1, true);
+		cout << rnd;
+		if (rnd.test_ferma(times))
+		{
+			cout << "\t Test Ferma: prime\t\t\t";
+		}
+		else
+		{
+			cout << "\t Test Ferma: not prime\t\t\t";
+		}
 
-	//test 3
-	int N = 1000, M = 2000;
-	bnum m(M / 2 + M / 4, true);
-	bnum z = m.barret_z(m);
-	for (size_t i = 0; i < N; i++)
-	{
-		bnum x(M, true);
-		bnum x_mod = x % m;
-		bnum x_barret = x.barret(m, z);
-		if (x_barret != x_mod)
+		cout << "\teps error in %: ";
+		printf("%.5f", rnd.eps_Ferma(rnd, times) * 100);
+		cout << "\n" << endl;
+
+
+		if (rnd.solov_shtras(times))
 		{
-			cout << "Fail on test: " << i << endl;
+			cout << "\t Test Solovey-Strassen: prime\t\t";
 		}
-		if (i % 100 == 0 && i > 0)
+		else
 		{
-			cout << "Done " << i << " tests\n";
+			cout << "\t Test Solovey-Strassen: not prime\t";
 		}
+
+		cout << "\teps error in %: ";
+		printf("%.5f", rnd.eps_solov_shtras(rnd, times) * 100);
+		cout << "\n" << endl;
+
+		cout << "\n" << endl;
 	}
-	cout << "\tDone cmp test\n" << endl;
-	int NN = 1000, MM = 2000;
-	bnum mm(MM / 2 + MM / 4, true);
-	bnum zz = mm.barret_z(mm);
-	auto begin = chrono::steady_clock::now();
-	for (size_t i = 0; i < NN; i++)
-	{
-		bnum xx(M, true);
-		bnum x_barret = xx.barret(mm, zz);
-	}
-	auto end = chrono::steady_clock::now();
-	auto ms = chrono::duration_cast<chrono::milliseconds>(end - begin);
-	cout << "Time barret: " << ms.count() << endl;
-	begin = chrono::steady_clock::now();
-	for (size_t i = 0; i < NN; i++)
-	{
-		bnum xx(M, true);
-		bnum x_mod = xx % mm;
-	}
-	end = chrono::steady_clock::now();
-	ms = chrono::duration_cast<chrono::milliseconds>(end - begin);
-	cout << "Time mod: " << ms.count() << endl;
+
+
+	cout << "Test ferma lies:" << endl;
 	while (true)
 	{
-		bnum x;
-		cin >> x;
-		bnum m;
-		cin >> m;
-		bnum z = m.barret_z(m);
-		bnum res = x.barret(m, z);
-		cout << res << endl;
+		bnum rnd(1, true);
+
+		if (rnd.test_ferma(1) && !rnd.solov_shtras(times))
+		{
+			cout << rnd << endl;
+			cout << "\tTest Ferma: prime" << endl;
+			cout << "\t Test Solovey-Strassen: not prime" << endl;
+			break;
+		}
 	}
+
+	//test 3
+	//int N = 1000, M = 2000;
+	//bnum m(M / 2 + M / 4, true);
+	//bnum z = m.barret_z(m);
+	//for (size_t i = 0; i < N; i++)
+	//{
+	//	bnum x(M, true);
+	//	bnum x_mod = x % m;
+	//	bnum x_barret = x.barret(m, z);
+	//	if (x_barret != x_mod)
+	//	{
+	//		cout << "Fail on test: " << i << endl;
+	//	}
+	//	if (i % 100 == 0 && i > 0)
+	//	{
+	//		cout << "Done " << i << " tests\n";
+	//	}
+	//}
+	//cout << "\tDone cmp test\n" << endl;
+	//int NN = 1000, MM = 2000;
+	//bnum mm(MM / 2 + MM / 4, true);
+	//bnum zz = mm.barret_z(mm);
+	//auto begin = chrono::steady_clock::now();
+	//for (size_t i = 0; i < NN; i++)
+	//{
+	//	bnum xx(M, true);
+	//	bnum x_barret = xx.barret(mm, zz);
+	//}
+	//auto end = chrono::steady_clock::now();
+	//auto ms = chrono::duration_cast<chrono::milliseconds>(end - begin);
+	//cout << "Time barret: " << ms.count() << endl;
+	//begin = chrono::steady_clock::now();
+	//for (size_t i = 0; i < NN; i++)
+	//{
+	//	bnum xx(M, true);
+	//	bnum x_mod = xx % mm;
+	//}
+	//end = chrono::steady_clock::now();
+	//ms = chrono::duration_cast<chrono::milliseconds>(end - begin);
+	//cout << "Time mod: " << ms.count() << endl;
+	//while (true)
+	//{
+	//	bnum x;
+	//	cin >> x;
+	//	bnum m;
+	//	cin >> m;
+	//	bnum z = m.barret_z(m);
+	//	bnum res = x.barret(m, z);
+	//	cout << res << endl;
+	//}
 
 	//test 1
 	//int N = 20, M = 6000;
@@ -1332,6 +1561,6 @@ int main()
 	//{
 	//	cout << "BAD" << endl;
 	//}
-
+	system("pause");
 	return 0;
 }
