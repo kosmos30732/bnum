@@ -1361,6 +1361,58 @@ public:
 
 		return true;
 	}
+
+	bool miller_rabin(int t)
+	{
+		int tmp = coef[0], s = 0;
+		tmp--;
+		while (tmp % 2 == 0)
+		{
+			tmp /= 2;
+			s++;
+		}
+		bnum r;
+		r.coef[0] = tmp;
+		while (t--)
+		{
+			bnum b;
+			while (true)
+			{
+				bnum b_tmp(1, true);
+				if (b_tmp.coef[0] >= 2 && b_tmp.coef[0] <= coef[0] - 2)
+				{
+					b = b_tmp;
+					break;
+				}
+			}
+
+			bnum y;
+			y = b.sqr_in(r);
+			y = y % (*this);
+
+			if (y.coef[0] != coef[0] - 1 && y.coef[0] != 1)
+			{
+				int j = 1;
+				while (j < s && y.coef[0] != coef[0] - 1)
+				{
+					y = y.fast_sqr();
+					y = y % (*this);
+					if (y.coef[0] == 1)
+					{
+						return false;
+					}
+					j++;
+				}
+				if (y.coef[0] != coef[0] - 1)
+				{
+					return false;
+				}
+			}
+
+		}
+
+		return true;
+	}
 };
 
 
@@ -1374,11 +1426,11 @@ int main()
 		cout << rnd;
 		if (rnd.test_ferma(times))
 		{
-			cout << "\t Test Ferma: prime\t\t\t";
+			cout << "\tTest Ferma: prime number\t\t\t";
 		}
 		else
 		{
-			cout << "\t Test Ferma: not prime\t\t\t";
+			cout << "\tTest Ferma: composite number\t\t\t";
 		}
 
 		cout << "\teps error in %: ";
@@ -1388,31 +1440,49 @@ int main()
 
 		if (rnd.solov_shtras(times))
 		{
-			cout << "\t Test Solovey-Strassen: prime\t\t";
+			cout << "\tTest Solovey-Strassen: prime number\t\t";
 		}
 		else
 		{
-			cout << "\t Test Solovey-Strassen: not prime\t";
+			cout << "\tTest Solovey-Strassen: composite number\t\t";
 		}
 
 		cout << "\teps error in %: ";
 		printf("%.5f", rnd.eps_solov_shtras(rnd, times) * 100);
 		cout << "\n" << endl;
 
+		if (rnd.miller_rabin(times))
+		{
+			cout << "\tTest Miller - Rabin: prime number\t\t";
+		}
+		else
+		{
+			cout << "\tTest Miller - Rabin: composite number\t";
+		}
+
+
 		cout << "\n" << endl;
 	}
 
-
-	cout << "Test ferma lies:" << endl;
 	while (true)
 	{
 		bnum rnd(1, true);
 
 		if (rnd.test_ferma(1) && !rnd.solov_shtras(times))
 		{
+			cout << "Test ferma lies:" << endl;
 			cout << rnd << endl;
-			cout << "\tTest Ferma: prime" << endl;
-			cout << "\t Test Solovey-Strassen: not prime" << endl;
+			cout << "\tTest Ferma: prime number" << endl;
+			cout << "\tTest Solovey-Strassen: composite number" << endl;
+			if (rnd.miller_rabin(times))
+			{
+				cout << "\tTest Miller - Rabin: prime number" << endl;
+			}
+			else
+			{
+				cout << "\tTest Miller - Rabin: composite number" << endl;
+			}
+
 			break;
 		}
 	}
