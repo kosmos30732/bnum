@@ -106,6 +106,7 @@ class bnum {
 	int max_len = 0;      //выделеная память
 	BASE* coef = nullptr; //массив коэфициентов
 
+	//removing insignificant zeros
 	void del_zeros()
 	{
 		int i = max_len - 1;
@@ -229,7 +230,7 @@ public:
 	}
 
 	//16-иричный
-
+	/*
 	friend istream& operator >>(istream& in, bnum& cur)
 	{
 		string temp, str;
@@ -360,8 +361,10 @@ public:
 		return out;
 	}
 
+	*/
+
 	//десятичный
-	/*
+
 	friend istream& operator >>(istream& in, bnum& cur)
 	{
 		string s;
@@ -434,7 +437,6 @@ public:
 
 		return out;
 	}
-	*/
 
 	bool operator == (const bnum other)
 	{
@@ -1137,6 +1139,7 @@ public:
 		return u;
 	}
 
+	//calc this^2
 	bnum fast_sqr()
 	{
 		bnum res(2 * len + 1);
@@ -1164,13 +1167,14 @@ public:
 		return res;
 	}
 
-	bnum sqr_in(const bnum y)
+	//calc this^pow
+	bnum sqr_in(const bnum pow)
 	{
-		int n = (y.len - 1) * BASE_SIZE;
+		int n = (pow.len - 1) * BASE_SIZE;
 		int idx = BASE_SIZE - 1;
 		while (true)
 		{
-			if (y.coef[y.len - 1] & (1 << idx))
+			if (pow.coef[pow.len - 1] & (1 << idx))
 			{
 				n += idx + 1;
 				break;
@@ -1183,9 +1187,43 @@ public:
 		for (int i = n - 2; i >= 0; i--)
 		{
 			z = z.fast_sqr();
-			if (y.coef[i / BASE_SIZE] & (1 << (i % BASE_SIZE)))
+			if (pow.coef[i / BASE_SIZE] & (1 << (i % BASE_SIZE)))
 			{
 				z = z * (*this);
+			}
+		}
+		return z;
+	}
+
+	//calc this^pow % mod
+	bnum pm(const bnum& pow, const bnum& mod)
+	{
+		if (mod.coef[0] == 1 && mod.len == 1)
+		{
+			bnum res;
+			return res;
+		}
+
+		int n = (pow.len - 1) * BASE_SIZE;
+		int idx = BASE_SIZE - 1;
+		while (true)
+		{
+			if (pow.coef[pow.len - 1] & (1 << idx))
+			{
+				n += idx + 1;
+				break;
+			}
+			idx--;
+		}
+
+		bnum z(1);
+		z = (*this) % mod;
+		for (int i = n - 2; i >= 0; i--)
+		{
+			z = z.fast_sqr() % mod;
+			if (pow.coef[i / BASE_SIZE] & (1 << (i % BASE_SIZE)))
+			{
+				z = (z * (*this)) % mod;
 			}
 		}
 		return z;
@@ -1267,18 +1305,6 @@ public:
 		return z;
 	}
 
-	bnum sqr_in_mod(bnum a, bnum n)
-	{
-		bnum res;
-		bnum n_1(1);
-		n_1.coef[0] = 1;
-		n_1 = n - n_1;
-
-		res = a.sqr_in(n_1);
-		res = res % n;
-		return res;
-	}
-
 	bnum sqr_in_mod_solov_shtras(bnum a, bnum n)
 	{
 		bnum res;
@@ -1296,21 +1322,29 @@ public:
 
 	bool test_ferma(int t)
 	{
+		bnum number2, n_2;
+		number2.coef[0] = 2;
+		n_2 = (*this) - number2;
+		
+		bnum number1, n_1;
+		number1.coef[0] = 1;
+		n_1 = (*this) - number1;
+
 		while (t--)
 		{
 			bnum a;
 			while (true)
 			{
-				bnum a_tmp(1, true);
-				if (a_tmp.coef[0] >= 2 && a_tmp.coef[0] <= coef[0] - 2)
+				bnum a_tmp(1 + rand() % len, true);
+				if (a_tmp >= number2 && a_tmp <= n_2)
 				{
 					a = a_tmp;
 					break;
 				}
 			}
 
-			bnum res = a.sqr_in_mod(a, *this);
-			if (res.coef[0] != 1)
+			bnum res = a.pm(n_1, *this);
+			if (res != number1)
 			{
 				return false;
 			}
@@ -1364,22 +1398,31 @@ public:
 
 	bool miller_rabin(int t)
 	{
-		int tmp = coef[0], s = 0;
-		tmp--;
-		while (tmp % 2 == 0)
+		bnum zero, number1, r, tmp, n_1;
+		DDBASE s = 0;
+
+		number1.coef[0] = 1;
+		tmp = (*this) - number1;
+		n_1 = tmp;
+		while (tmp % 2 == zero)
 		{
-			tmp /= 2;
+			tmp = tmp / 2;
 			s++;
 		}
-		bnum r;
-		r.coef[0] = tmp;
+
+		r = tmp;
+
+		bnum number2, n_2;
+		number2.coef[0] = 2;
+		n_2 = (*this) - number2;
+
 		while (t--)
 		{
 			bnum b;
 			while (true)
 			{
-				bnum b_tmp(1, true);
-				if (b_tmp.coef[0] >= 2 && b_tmp.coef[0] <= coef[0] - 2)
+				bnum b_tmp(1 + rand() % len, true);
+				if (b_tmp >= number2 && b_tmp <= n_2)
 				{
 					b = b_tmp;
 					break;
@@ -1387,31 +1430,82 @@ public:
 			}
 
 			bnum y;
-			y = b.sqr_in(r);
-			y = y % (*this);
+			y = b.pm(r, *this);
 
-			if (y.coef[0] != coef[0] - 1 && y.coef[0] != 1)
+			if (y != n_1 && y != number1)
 			{
-				int j = 1;
-				while (j < s && y.coef[0] != coef[0] - 1)
+				DDBASE j = 1;
+				while (j < s && y != n_1)
 				{
-					y = y.fast_sqr();
-					y = y % (*this);
-					if (y.coef[0] == 1)
+					y = y.pm(number2, *this);
+					if (y == number1)
 					{
 						return false;
 					}
 					j++;
 				}
-				if (y.coef[0] != coef[0] - 1)
+				if (y != n_1)
 				{
 					return false;
 				}
 			}
-
 		}
 
 		return true;
+	}
+
+	bnum gen_stong_prime(int size_coef)
+	{
+		int times = 111;
+		bnum s;
+		while (true)
+		{
+			bnum tmp(size_coef, true);
+			if (tmp.miller_rabin(times))
+			{
+				s = tmp;
+				break;
+			}
+		}
+
+		bnum t;
+		while (true)
+		{
+			bnum tmp(size_coef, true);
+			if (tmp.miller_rabin(times))
+			{
+				t = tmp;
+				break;
+			}
+		}
+		bnum number2, number1;
+		number2.coef[0] = 2;
+		number1.coef[0] = 1;
+
+		bnum i0(1, true), r;
+		while (true)
+		{
+			r = i0 * t * number2 + number1;
+			if (r.miller_rabin(times))
+			{
+				break;
+			}
+			i0 = i0 + number1;
+		}
+		bnum p0;
+		p0 = s.pm(r - number2, r) * s * number2 - number1;
+
+		bnum j0(1, true), p;
+		while (true)
+		{
+			p = j0 * r * s * number2 + p0;
+			if (p.miller_rabin(times))
+			{
+				break;
+			}
+			j0 = j0 + number1;
+		}
+		return p;
 	}
 };
 
@@ -1419,73 +1513,66 @@ public:
 int main()
 {
 	srand(unsigned int(time(NULL)));
-	int times = 13;
-	for (int i = 0; i < 6; i++)
+	//int times = 10;
+	//for (int i = 0; i < 6; i++)
+	//{
+	//	bnum rnd(5, true);
+	//	cout << rnd;
+	//	if (rnd.test_ferma(times))
+	//	{
+	//		cout << "\tTest Ferma: prime number\n";
+	//	}
+	//	else
+	//	{
+	//		cout << "\tTest Ferma: composite number\n";
+	//	}
+	//	if (rnd.miller_rabin(times))
+	//	{
+	//		cout << "\tTest Miller - Rabin: prime number\n";
+	//	}
+	//	else
+	//	{
+	//		cout << "\tTest Miller - Rabin: composite number\n";
+	//	}
+	//	cout << "\n" << endl;
+	//}
+	//int n = 3;
+	//while (n)
+	//{
+	//	bnum rnd(3, true);
+	//	if (rnd.miller_rabin(times))
+	//	{
+	//		cout << rnd << endl;
+	//		cout << "\tTest Miller - Rabin: prime number\n";
+	//		if (rnd.test_ferma(1))
+	//		{
+	//			cout << "\tTest Ferma: prime number";
+	//		}
+	//		else
+	//		{
+	//			cout << "\tTest Ferma: composite number";
+	//		}
+	//		cout << "\n" << endl;
+	//		n--;
+	//	}
+	//}
+
+	for (size_t i = 0; i < 5; i++)
 	{
-		bnum rnd(1, true);
-		cout << rnd;
-		if (rnd.test_ferma(times))
+		bnum gen;
+		gen = gen.gen_stong_prime(4);
+		cout << gen;
+		if (gen.miller_rabin(111))
 		{
-			cout << "\tTest Ferma: prime number\t\t\t";
+			cout << "\t\tTest Miller - Rabin: prime number";
 		}
 		else
 		{
-			cout << "\tTest Ferma: composite number\t\t\t";
+			cout << "\t\tTest Miller - Rabin: composite number";
 		}
-
-		cout << "\teps error in %: ";
-		printf("%.5f", rnd.eps_Ferma(rnd, times) * 100);
-		cout << "\n" << endl;
-
-
-		if (rnd.solov_shtras(times))
-		{
-			cout << "\tTest Solovey-Strassen: prime number\t\t";
-		}
-		else
-		{
-			cout << "\tTest Solovey-Strassen: composite number\t\t";
-		}
-
-		cout << "\teps error in %: ";
-		printf("%.5f", rnd.eps_solov_shtras(rnd, times) * 100);
-		cout << "\n" << endl;
-
-		if (rnd.miller_rabin(times))
-		{
-			cout << "\tTest Miller - Rabin: prime number\t\t";
-		}
-		else
-		{
-			cout << "\tTest Miller - Rabin: composite number\t";
-		}
-
-
-		cout << "\n" << endl;
+		cout << endl;
 	}
 
-	while (true)
-	{
-		bnum rnd(1, true);
-
-		if (rnd.test_ferma(1) && !rnd.solov_shtras(times))
-		{
-			cout << "Test ferma lies:" << endl;
-			cout << rnd << endl;
-			cout << "\tTest Ferma: prime number" << endl;
-			cout << "\tTest Solovey-Strassen: composite number" << endl;
-			if (rnd.miller_rabin(times))
-			{
-				cout << "\tTest Miller - Rabin: prime number" << endl;
-			}
-			else
-			{
-				cout << "\tTest Miller - Rabin: composite number" << endl;
-			}
-
-			break;
-		}
-	}
 
 	//test 3
 	//int N = 1000, M = 2000;
