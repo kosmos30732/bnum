@@ -8,6 +8,7 @@
 #include <string>
 #include <cmath>
 #include <iomanip>
+#include <vector>
 
 typedef unsigned short BASE;
 typedef unsigned int DBASE;
@@ -1456,7 +1457,7 @@ public:
 
 	bnum gen_stong_prime(int size_coef)
 	{
-		int times = 111;
+		int times = 112;
 		bnum s;
 		while (true)
 		{
@@ -1507,12 +1508,115 @@ public:
 		}
 		return p;
 	}
+
+	void prob_del(vector <bnum> &p, bnum n)
+	{
+		bnum zero, one, two, three, six;
+		one.coef[0] = 1;
+		two.coef[0] = 2;
+		three.coef[0] = 3;
+		six.coef[0] = 6;
+
+		p.push_back(one);
+
+		if (n==one)
+		{
+			return;
+		}
+		if (n==two)
+		{
+			p.push_back(two);
+			return;
+		}
+		if (n == three)
+		{
+			p.push_back(three);
+			return;
+		}
+
+
+		if (n.miller_rabin(100))
+		{
+			p.push_back(n);
+			return;
+		}
+		
+		while (n%two==zero)
+		{
+			p.push_back(two);
+			n = n / two;
+		}
+
+		bnum d1, d2, d3;
+		d1.coef[0] = 3;
+		d2.coef[0] = 5;
+		d3.coef[0] = 7;
+
+		while (n!=one)
+		{
+			bnum r;
+			r = n % d1;
+			if (r==zero)
+			{
+				p.push_back(d1);
+				n = n / d1;
+				continue;
+			}
+			bnum q;
+			q = n / d1;
+			if (q>d1)
+			{
+				d1 = d2;
+				d2 = d3;
+				d3 = d1 + six;
+			}
+			else
+			{
+				p.push_back(n);
+				return;
+			}
+		}
+		return;
+	}
 };
 
 
 int main()
 {
 	srand(unsigned int(time(NULL)));
+
+	for (size_t i = 1; i < 4; i++)
+	{
+		bnum num(i, 1);
+		cout << num << endl;
+		vector <bnum> res;
+		num.prob_del(res, num);
+
+		for (auto s : res)
+		{
+			cout << s << " ";
+		}
+
+		cout << endl;
+		cout << endl;
+	}
+
+	bnum num;
+	cin >> num;
+
+	cout << num << endl;
+	vector <bnum> res;
+	num.prob_del(res, num);
+
+	for (auto s : res)
+	{
+		cout << s << " ";
+	}
+
+	cout << endl;
+
+
+
 	//int times = 10;
 	//for (int i = 0; i < 6; i++)
 	//{
@@ -1557,21 +1661,21 @@ int main()
 	//	}
 	//}
 
-	for (size_t i = 0; i < 5; i++)
-	{
-		bnum gen;
-		gen = gen.gen_stong_prime(4);
-		cout << gen;
-		if (gen.miller_rabin(111))
-		{
-			cout << "\t\tTest Miller - Rabin: prime number";
-		}
-		else
-		{
-			cout << "\t\tTest Miller - Rabin: composite number";
-		}
-		cout << endl;
-	}
+	//for (size_t i = 0; i < 5; i++)
+	//{
+	//	bnum gen;
+	//	gen = gen.gen_stong_prime(6+i*2);
+	//	cout << gen;
+	//	if (gen.miller_rabin(111))
+	//	{
+	//		cout << "\t\tTest Miller - Rabin: prime number";
+	//	}
+	//	else
+	//	{
+	//		cout << "\t\tTest Miller - Rabin: composite number";
+	//	}
+	//	cout << endl;
+	//}
 
 
 	//test 3
