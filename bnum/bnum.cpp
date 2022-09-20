@@ -1326,7 +1326,7 @@ public:
 		bnum number2, n_2;
 		number2.coef[0] = 2;
 		n_2 = (*this) - number2;
-		
+
 		bnum number1, n_1;
 		number1.coef[0] = 1;
 		n_1 = (*this) - number1;
@@ -1509,7 +1509,7 @@ public:
 		return p;
 	}
 
-	void prob_del(vector <bnum> &p, bnum n)
+	void prob_del(vector <bnum>& p, bnum n)
 	{
 		bnum zero, one, two, three, six;
 		one.coef[0] = 1;
@@ -1519,11 +1519,11 @@ public:
 
 		p.push_back(one);
 
-		if (n==one)
+		if (n == one)
 		{
 			return;
 		}
-		if (n==two)
+		if (n == two)
 		{
 			p.push_back(two);
 			return;
@@ -1540,8 +1540,8 @@ public:
 			p.push_back(n);
 			return;
 		}
-		
-		while (n%two==zero)
+
+		while (n % two == zero)
 		{
 			p.push_back(two);
 			n = n / two;
@@ -1552,11 +1552,11 @@ public:
 		d2.coef[0] = 5;
 		d3.coef[0] = 7;
 
-		while (n!=one)
+		while (n != one)
 		{
 			bnum r;
 			r = n % d1;
-			if (r==zero)
+			if (r == zero)
 			{
 				p.push_back(d1);
 				n = n / d1;
@@ -1564,7 +1564,7 @@ public:
 			}
 			bnum q;
 			q = n / d1;
-			if (q>d1)
+			if (q > d1)
 			{
 				d1 = d2;
 				d2 = d3;
@@ -1578,6 +1578,7 @@ public:
 		}
 		return;
 	}
+
 };
 
 
@@ -1585,36 +1586,36 @@ int main()
 {
 	srand(unsigned int(time(NULL)));
 
-	for (size_t i = 1; i < 4; i++)
-	{
-		bnum num(i, 1);
-		cout << num << endl;
-		vector <bnum> res;
-		num.prob_del(res, num);
-
-		for (auto s : res)
-		{
-			cout << s << " ";
-		}
-
-		cout << endl;
-		cout << endl;
-	}
-
-	bnum num;
-	cin >> num;
-
-	cout << num << endl;
-	vector <bnum> res;
-	num.prob_del(res, num);
-
-	for (auto s : res)
-	{
-		cout << s << " ";
-	}
-
-	cout << endl;
-
+	//for (size_t j = 0; j < 5; j++)
+	//{
+	//	for (size_t i = 1; i < 3; i++)
+	//	{
+	//		bnum num(i, 1);
+	//		cout << num << endl;
+	//		vector <bnum> res;
+	//		num.prob_del(res, num);
+	//		for (auto s : res)
+	//		{
+	//			cout << s << " ";
+	//		}
+	//		cout << endl;
+	//		cout << endl;
+	//	}
+	//}
+	//cout << "Interactive" << endl;
+	//while (true)
+	//{
+	//	bnum num;
+	//	cin >> num;
+	//	vector <bnum> res;
+	//	num.prob_del(res, num);
+	//	for (auto s : res)
+	//	{
+	//		cout << s << " ";
+	//	}
+	//	cout << endl;
+	//	cout << endl;
+	//}
 
 
 	//int times = 10;
